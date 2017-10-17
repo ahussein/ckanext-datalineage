@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{% block package_basic_fields_custom %}
+    {{ form.input('parent', label=_('Parent'), id='field-parent', placeholder=_('Parent'), value=data.parent, error=errors.parent, classes=['control-medium']) }}
+
+   {{ form.input('producers', label=_('Producers'), id='field-producers', placeholder=_('Producers'), value=data.producers, error=errors.producers, classes=['control-medium']) }}
+
+   {{ form.input('consumers', label=_('Consumers'), id='field-consumers', placeholder=_('Consumers'), value=data.consumers, error=errors.consumers, classes=['control-medium'])  }}
+{% endblock %}

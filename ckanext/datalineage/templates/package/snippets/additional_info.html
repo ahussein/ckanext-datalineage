@@ -1,0 +1,10 @@
+{% ckan_extends %}
+
+{% block extras %}
+    {% if pkg_dict.parent %}
+    <tr>
+        <th scope='row' class='dataset-label'>{{ _('Parent') }}</th>
+        <td class='dataset-details'>{{ pkg_dict.Parent }}</td>
+    </tr>
+    {% endif %}
+{% endblock %}
