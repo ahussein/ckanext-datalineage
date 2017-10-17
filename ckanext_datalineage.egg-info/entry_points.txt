@@ -1,0 +1,7 @@
+
+        [ckan.plugins]
+        datalineage=ckanext.datalineage.plugin:DatalineagePlugin
+
+        [babel.extractors]
+        ckan = ckan.lib.extract:extract_ckan
+    
