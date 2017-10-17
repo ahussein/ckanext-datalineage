@@ -4,7 +4,21 @@
     {% if pkg_dict.parent %}
     <tr>
         <th scope='row' class='dataset-label'>{{ _('Parent') }}</th>
-        <td class='dataset-details'>{{ pkg_dict.Parent }}</td>
+        <td class='dataset-details'>{{ pkg_dict.parent }}</td>
+    </tr>
+    {% endif %}
+    
+    {% if pkg_dict.producers %}
+    <tr>
+        <th scope='row' class='dataset-label'>{{ _('Producers') }}</th>
+        <td class='dataset-details'>{{ pkg_dict.producers }}</td>
+    </tr>
+    {% endif %}
+
+    {% if pkg_dict.consumers %}
+    <tr>
+        <th scope='row' class='dataset-label'>{{ _('Consumers') }}</th>
+        <td class='dataset-details'>{{ pkg_dict.consumers }}</td>
     </tr>
     {% endif %}
 {% endblock %}

@@ -22,15 +22,8 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         tk.add_public_directory(config_, 'public')
         tk.add_resource('fanstatic', 'datalineage')
     
-
-    # IDatasetForm
-    def create_package_schema(self):
-        """
-        Returns the schema for validating new dataset dicts
-        """
-        # lets grab the default schema in out plugin
-        schema = super(DatalineagePlugin, self).create_package_schema()
-        logger.debug('Updating default dataset schema with datalineage fields')
+    # Helpers
+    def _modify_package_schema(self, schema):
         # our custom fields
         schema.update({
             # parent represents the model/process that procuded the dataset, it should be a dataset id
@@ -48,6 +41,17 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
 
         return schema
 
+
+    # IDatasetForm
+    def create_package_schema(self):
+        """
+        Returns the schema for validating new dataset dicts
+        """
+        # lets grab the default schema in out plugin
+        schema = super(DatalineagePlugin, self).create_package_schema()
+        logger.debug('Updating default dataset schema with datalineage fields')
+        return self._modify_package_schema(schema)
+        
     
 
     def update_package_schema(self):
@@ -55,22 +59,7 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
         Returns the schema for validating an update dataset dicts
         """
         schema = super(DatalineagePlugin, self).update_package_schema()
-        schema.update({
-            # parent represents the model/process that procuded the dataset, it should be a dataset id
-            'parent': [tk.get_validator('ignore_missing'),
-                       tk.get_converter('convert_to_extras')],
-            # producers are comma seperated list of datasets ids that produced the current dataset
-            'producers': [tk.get_validator('ignore_missing'),
-                          tk.get_validator('convert_to_extras')],
-            
-            # consumers are comma seperated list of datasets ids that produced using the current dataset
-            'consumers': [tk.get_validator('ignore_missing'),
-                          tk.get_validator('convert_to_extras')],
-
-        })
-
-        return schema
-    
+        return self._modify_package_schema(schema)    
 
     def show_package_schema(self):
         """
