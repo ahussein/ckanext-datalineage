@@ -37,6 +37,10 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             'consumers': [tk.get_validator('ignore_missing'),
                           tk.get_validator('convert_to_extras')],
 
+            # code that identify the dataset/activity
+            'code': [tk.get_validator('ignore_missing'),
+                          tk.get_validator('convert_to_extras')],
+
         })
 
         return schema
@@ -84,6 +88,12 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
             
             # consumers are comma seperated list of datasets ids that produced using the current dataset
             'consumers': [
+                tk.get_converter('convert_from_extras'),
+                tk.get_validator('ignore_missing'),    
+            ],
+
+            # code that identify the dataset/activity
+            'code': [
                 tk.get_converter('convert_from_extras'),
                 tk.get_validator('ignore_missing'),    
             ],

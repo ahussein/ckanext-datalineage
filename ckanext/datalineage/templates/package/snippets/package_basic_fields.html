@@ -1,7 +1,9 @@
 {% ckan_extends %}
 
 {% block package_basic_fields_custom %}
-    {{ form.input('parent', label=_('Parent'), id='field-parent', placeholder=_('Parent'), value=data.parent, error=errors.parent, classes=['control-medium']) }}
+   {{ form.input('code', label=_('Code'), id='field-code', placeholder=_('Code'), value=data.code, error=errors.code, classes=['control-medium']) }}
+
+   {{ form.input('parent', label=_('Parent'), id='field-parent', placeholder=_('Parent'), value=data.parent, error=errors.parent, classes=['control-medium']) }}
 
    {{ form.input('producers', label=_('Producers'), id='field-producers', placeholder=_('Producers'), value=data.producers, error=errors.producers, classes=['control-medium']) }}
 

@@ -7,6 +7,10 @@ setup.py
 ckanext/__init__.py
 ckanext/datalineage/__init__.py
 ckanext/datalineage/plugin.py
+ckanext/datalineage/templates/package/search.html
+ckanext/datalineage/templates/package/snippets/additional_info.html
+ckanext/datalineage/templates/package/snippets/package_basic_fields.html
+ckanext/datalineage/templates/package/snippets/package_metadata_fields.html
 ckanext/datalineage/tests/__init__.py
 ckanext/datalineage/tests/test_plugin.py
 ckanext_datalineage.egg-info/PKG-INFO
