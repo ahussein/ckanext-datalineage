@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{% block content_primary_nav %}
+
+    {{ super() }}
+    {% if pkg.parent or pkg.producers or pkg.consumers %}
+        {{ h.build_nav_icon('dataset_lineage', _('Lineage Info'), id=pkg.name) }}    
+    {% endif %}
+{% endblock %}

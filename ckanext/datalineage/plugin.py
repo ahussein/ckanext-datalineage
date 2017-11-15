@@ -10,6 +10,21 @@ logger = logging.getLogger(__name__)
 class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IDatasetForm)
+    plugins.implements(plugins.IRoutes)
+
+    # IRoutes
+    def after_map(self, map):
+        """
+        Map dataset_lineage 
+        """
+        map.connect('dataset_lineage', '/dataset/lineage/{id}',
+                  controller='ckanext.datalineage.controllers.datalineage:DataLineageController',
+                  action='show_datalineage', ckan_icon='sitemap')
+        return map
+    
+    def before_map(self, map):
+        return map
+
 
     # IConfigurer
 
