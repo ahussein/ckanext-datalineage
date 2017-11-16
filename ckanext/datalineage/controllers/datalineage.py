@@ -4,12 +4,13 @@ Implements required controllers for the data lineage extension
 """
 
 from ckan.controllers.package import PackageController
-from ckan.common import OrderedDict, _, json, request, c, response
+from ckan.common import OrderedDict, _, json, request, c, response, config
 import ckan.model as model
 import ckan.lib.base as base
 import ckan.logic as logic
 
 import logging
+from paste.deploy.converters import asbool
 
 
 logger = logging.getLogger(__name__)
@@ -38,10 +39,49 @@ class DataLineageController(PackageController):
         try:
             c.pkg_dict = get_action('package_show')(context, data_dict)
             c.pkg = context['package']
-            # c.package_activity_stream = get_action(
-            #     'package_activity_list_html')(
-            #     context, {'id': c.pkg_dict['id']})
-            c.datalineage = 'hello'
+
+            # this is a DS
+            if c.pkg_dict.get('parent'):
+                q = 'extras_code:%s' % (c.pkg_dict.get('parent').replace(':', '\:'))
+            else:
+                # this is a process/activity/model
+                q = 'extras_parent:%s' % (c.pkg_dict.get('code').replace(':', '\:'))
+
+            search_extras = {}
+            data_dict = {
+                'q': q,
+                'fq': q,
+                'extras': search_extras,
+                'include_private': asbool(config.get(
+                    'ckan.search.default_include_private', True)),
+            }
+            query = get_action('package_search')(context, data_dict)
+
+            if c.pkg_dict.get('parent'):
+                c.datalineage_wesgeneratedby = query['results'][0]
+            else:
+                c.datalineage_generates = query['results'][0]
+            
+            # get the producers DSs
+            producers = c.pkg_dict.get('producers', []) or query['results'][0].get('producers', [])
+            producers_info = []
+            for ds_code in producers.split(','):
+                q = 'extras_code:%s' % (ds_code.replace(':', '\:'))
+                data_dict = {
+                'q': q,
+                'fq': q,
+                'extras': {},
+                'include_private': asbool(config.get(
+                    'ckan.search.default_include_private', True)),
+                }
+                query = get_action('package_search')(context, data_dict)
+                if query['count'] == 0:
+                    logger.warning('No result found for producer [%s] of package [%s]' % (ds_code, c.pkg_dict['code']) )
+                else:
+                    producers_info.append(query['results'][0])
+
+            c.datalineage_producers = producers_info
+
             dataset_type = c.pkg_dict['type'] or 'dataset'
         except NotFound:
             abort(404, _('Dataset not found'))
