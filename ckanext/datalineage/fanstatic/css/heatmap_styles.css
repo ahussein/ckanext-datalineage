@@ -1,0 +1,20 @@
+#heatmapArea, #MAP_heatmapArea, #T4M_heatmapArea, #MVI_heatmapArea, #INF_heatmapArea, #SEA_heatmapArea {
+	position:absolute;
+	height: 100%;
+	width: 100%; 
+	border:1px dashed black; 
+	pointer-events:none;
+	visibility:hidden;
+}
+
+#heatmapArea { 
+}
+
+#gmf_body {
+    z-index: 500;
+    position: relative;
+    height: 500px;
+    width: 100%;
+    padding: 0px;
+    overflow: scroll !important;
+}
