@@ -83,7 +83,6 @@
     	  dojo.byId("usage_dataset_mini_cards_container").style.width = "0px";
     	  dojo.byId("usage_model_mini_cards_container").style.left = "0px";
     	  dojo.byId("usage_model_mini_cards_container").style.width = "0px";
-    	  dojo.byId("lin_pub_texts").style.width = "900px";
       } else {
     	  dojo.byId("usage_dataset_mini_cards_container").style.left = "110px";
     	  dojo.byId("usage_model_mini_cards_container").style.left = "5px";

@@ -288,7 +288,6 @@ function setWhiteSize() {
   if (dojo.byId('lineage_model_0') == null && dojo.byId('usage_model_0') == null) factor = 1.5;
   if (factor < 2) factor = 2.0;
   
-  dojo.byId('lin_pub_texts').style.top = (factor * card_size_with_buffer + 170) + "px";
   dojo.byId('hide_and_show').style.top = (factor * card_size_with_buffer + 170) + "px";
   //dojo.byId('page').style.height = (factor * card_size_with_buffer + 1000) + "px"; 
   if (dojo.byId('footer') != null) dojo.byId('footer').style.top = (factor * card_size_with_buffer + 980) + "px";

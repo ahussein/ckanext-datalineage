@@ -92,18 +92,6 @@ EXAMPLE_DATA = {
             "paramName": "usage_models"
         },
         "mod_ds_relations": {
-            "map1": {
-                "dataset_ids": [
-                    "glues:ilr:metadata:dataset:capri"
-                ],
-                "paramName": "usage_models_1"
-            },
-            "map0": {
-                "dataset_ids": [
-                    "glues:kei:metadata:dataset:dart"
-                ],
-                "paramName": "usage_models_0"
-            },
             "usage_model_0": "model_0",
             "usage_model_1": "model_1",
             "paramName": "mod_ds_relations"
@@ -284,46 +272,7 @@ EXAMPLE_DATA = {
         }
     },
     "paramName": "metaViz_data",
-    "lineage_detail": {
-        "statement": {
-            "description": "",
-            "paramName": "statement"
-        },
-        "paramName": "lineage_detail",
-        "process_steps": {
-            "process_step_0": {
-                "dateTime": "2012-01-01T00:00:00",
-                "description": "Simulation of potential yield on representative sampling units in a Glues Region for 16 Glues&#45;Plants",
-                "paramName": "process_step_0",
-                "rationale": "not set",
-                "processor": "Department of Geography&#44; LMU Munich",
-                "processing_list": {
-                    "paramName": "processingList",
-                    "processing_0": {
-                        "runTimeParams": "",
-                        "identifier": "PROMET",
-                        "docs": {
-                            "size": 1,
-                            "paramName": "docs_0",
-                            "doc_0": {
-                                "date": "2009-07-22",
-                                "paramName": "doc_0",
-                                "alternateTitle": "",
-                                "id": "",
-                                "title": "Mauser&#44; W.&#44; Bach&#44; H. &#40;2009&#41;&#58; PROMET &#45; Large scale distributed hydrological modelling to study the impact of climate change on the water flows of mountain watersheds&#44; Journal of Hydrology.",
-                                "others": "http://www.sciencedirect.com/science/article/pii/S0022169409004478"
-                            }
-                        },
-                        "sw_refs": {
-                            "paramName": "sw_refs_0"
-                        },
-                        "paramName": "processing_0"
-                    }
-                }
-            },
-            "paramName": "process_steps"
-        }
-    },
+    
     "mapping_ids_uuids": {
         "usage_dataset_1": "glues:ilr:metadata:dataset:capri",
         "usage_dataset_0": "glues:kei:metadata:dataset:dart",
@@ -364,13 +313,12 @@ EXAMPLE_DATA = {
 }
 
 RESULTS = {
-    'model_data': {},
-    'usage': {},
-    'dataset_data': {},
+    'model_data': {"paramName": "models"},
+    'usage': {"paramName": "usage"},
+    'dataset_data': {"paramName": "datasets"},
     'paramName': 'metaViz_data',
-    'lineage_detail': {},
-    'mapping_ids_uuids': {},
-    'detail_data': {}
+    'mapping_ids_uuids': {"paramName": "mapping_ids_uuids"},
+    'detail_data': {"paramName": "detail"}
 }
 
 
@@ -380,7 +328,9 @@ def get_usage_models(context, ds_info):
     """
     models_info = []
     for model_code in ds_info.get('consumers', '').split(','):
+        model_code = model_code.strip()
         if model_code:
+            model_info = {}
             q = 'extras_code:%s' % (model_code.replace(':', '\:'))
             data_dict = {
             'q': q,
@@ -393,26 +343,30 @@ def get_usage_models(context, ds_info):
             if query['count'] == 0:
                 logger.warning('No result found for consumers [%s] of package [%s]' % (model_code, ds_info['code']) )
             else:
-                models_info.append(query['results'][0])
+                model_info = query['results'][0]
+                models_info.append(model_info)
                 # get the producers DSs
-                producers = query['results'][0].get('producers', [])
-                producers.remove(ds_info['code'])
-                producers_info = [ds_info]
-                for ds_code in producers.split(','):
-                    q = 'extras_code:%s' % (ds_code.replace(':', '\:'))
-                    data_dict = {
-                    'q': q,
-                    'fq': q,
-                    'extras': {},
-                    'include_private': asbool(config.get(
-                        'ckan.search.default_include_private', True)),
-                    }
-                    query = get_action('package_search')(context, data_dict)
-                    if query['count'] == 0:
-                        logger.warning('No result found for producer [%s] of package [%s]' % (ds_code, c.pkg_dict['code']) )
-                    else:
-                        producers_info.append(query['results'][0])
-                query['results'][0]['input_datasets'] = producers_info
+                producers = model_info.get('producers', [])
+                if producers:
+                    producers = producers.strip().split(',')
+                    producers.remove(ds_info['code'])
+                    producers_info = [ds_info]
+                    # producers_info = []
+                    for ds_code in producers:
+                        q = 'extras_code:%s' % (ds_code.replace(':', '\:'))
+                        data_dict = {
+                        'q': q,
+                        'fq': q,
+                        'extras': {},
+                        'include_private': asbool(config.get(
+                            'ckan.search.default_include_private', True)),
+                        }
+                        query = get_action('package_search')(context, data_dict)
+                        if query['count'] == 0:
+                            logger.warning('No result found for producer [%s] of package [%s]' % (ds_code, model_code) )
+                        else:
+                            producers_info.append(query['results'][0])
+                    model_info['input_datasets'] = producers_info
     return models_info
         
 
@@ -434,8 +388,200 @@ def get_usage_datasets(context, models):
         if query['count'] == 0:
             logger.warning('No dataset produced by model [%s] found' % (model['code']))
         else:
-            result[mode['code']] = query['results'][0]
-        return result
+            result[model['code']] = query['results'][0]
+    return result
+
+
+
+
+def create_metavis_ds_info(dataset_info, ds_type='usage_input', linked_2_model=False):
+    """
+    Convert the dataset structure that comes from ckan to the expected dataset structrue
+    of metaviz frontend UI
+
+    metaviz expects:
+
+    "extent": "180,-90;-180,-90;-180,90;180,90",
+            "keywords": "EUROSTAT dataset",
+            "save": "",
+            "description": "Summary&#58; EUROSTAT Statistical database provides time&#45;series data from European Union. Data cover 27 Member States of the European Union&#44; while some of the indicators are provided for other countries&#44; ...",
+            "organisation": "EUROSTAT",
+            "paramName": "1f057e8b-16f0-43ad-a788-860250a31625",
+            "title": "EUROSTAT",
+            "type": "usage_input",
+            "view": "http://catalog-glues.ufz.de/terraCatalog/Query/ShowCSWInfo.do?fileIdentifier=1f057e8b-16f0-43ad-a788-860250a31625",
+            "relations_csw": "",
+            "vector": "false",
+            "time": "1965-01-01-2012-01-01",
+            "linked_2_modelInput": 0,
+            "info": "null"
+    """
+    result = {
+        'extent': '',
+        'keywords': ','.join(dataset_info.get('tags', [])),
+        'save': '',
+        'description': dataset_info.get('notes', ''),
+        'organisation': dataset_info.get('organization', {}).get('name', ''),
+        'paramName': dataset_info.get('code', ''),
+        'title': dataset_info.get('title', ''),
+        'type': ds_type,
+        'view': dataset_info.get('url', ''),
+        'relations_csw': '',
+        'vector': 'false',
+        'time': dataset_info.get('metadata_created', ''),
+        'info': 'null',
+    }
+    if linked_2_model:
+        result['linked_2_modelInput'] = 0
+    # if not ds_type or "usage" in ds_type:
+    #     result['linked_2_modelInput'] = 0
+    return result
+
+
+
+def convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars):
+    """
+    Convert model data to the format needed by the metaviz UI frontend
+
+    "model_1": {
+            "dateTime": "2014-01-01T00:00:00",
+            "output_datasets": [
+                "glues:ilr:metadata:dataset:capri"
+            ],
+            "description": "The CAPRI model is a comparative static global partial equilibrium model for the agricultural sector. It endogenously determins market balances&#44; area use and yields and many other variables for agricu ...",
+            "organisation": "Institute for Food and Resource Economics&#44; Bonn University",
+            "paramName": "model_1",
+            "title": "CAPRI",
+            "type": "usage",
+            "info": "",
+            "input_datasets": [
+                "6479e718-3a61-45cb-b36a-015254f56d7a",
+                "596c710f-1830-4582-a0ec-13627f370b2f",
+                "1f057e8b-16f0-43ad-a788-860250a31625",
+                "glues:lmu:metadata:dataset:promet"
+            ]
+        }
+    """
+    
+    for index, model_info in enumerate(usage_models):
+        RESULTS['model_data']['model_{}'.format(index)] = {
+            'paramName': 'model_{}'.format(index),
+            'dateTime': model_info.get('metadata_created', ''),
+            'description': model_info.get('notes', ''),
+            'organisation': model_info.get('organization', {}).get('name', ''),
+            'title': model_info.get('title', ''),
+            'type': 'usage',
+            'info': '',
+            'output_datasets':[
+                usage_datasets.get(model_info['code'], {}).get('code', '')
+            ],
+            'input_datasets':[
+                producer_info['code'] for producer_info in model_info.get('input_datasets', [])
+            ]
+        }
+    
+    model_info = extra_vars['current_model']
+    RESULTS['model_data']['model_{}'.format(index+1)] = {
+            'paramName': 'model_{}'.format(index+1),
+            'dateTime': model_info.get('metadata_created', ''),
+            'description': model_info.get('notes', ''),
+            'organisation': model_info.get('organization', {}).get('name', ''),
+            'title': model_info.get('title', ''),
+            'type': 'lineage',
+            'info': '',
+            'output_datasets':[
+                extra_vars['detail_data']['code']
+            ],
+            'input_datasets':[
+                producer_info['code'] for producer_info in extra_vars['datalineage_producers']
+            ]
+    }
+
+def convert_extra_vars_to_metaviz(extra_vars):
+    """
+    Convert collected data from the current ckan dataset structure to the format the metaviz frontend UI expect
+    """
+    detail_data = create_metavis_ds_info(extra_vars['detail_data'],
+                                         ds_type="",
+                                         linked_2_model=True if extra_vars['usage_models'] else False)
+    RESULTS['detail_data'] = {'paramName': 'detail',
+                              extra_vars['detail_data']['code']: detail_data}
+    usage_models = extra_vars['usage_models']
+    usage_datasets = extra_vars['usage_datasets'] 
+    for model_info in usage_models:
+        for producer_info in model_info.get('input_datasets', []):
+            if producer_info['code'] != extra_vars['detail_data']['code']:
+                RESULTS['dataset_data'][producer_info['code']] = create_metavis_ds_info(producer_info,
+                                                                                        ds_type='usage_input',
+                                                                                        linked_2_model=True)
+    for _, usage_ds in usage_datasets.items():
+        RESULTS['dataset_data'][usage_ds['code']] = create_metavis_ds_info(usage_ds, 
+                                                                            ds_type='usage',
+                                                                            linked_2_model=False)
+                                                                        
+
+    convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars)
+
+    # now its time to update the usage and mapping attributes which I have no idea why they exist
+    # "usage": {
+    #     "models": {
+    #         "usage_model_ids": [
+    #             "usage_model_0",
+    #             "usage_model_1"
+    #         ],
+    #         "paramName": "usage_models"
+    #     },
+    #     "mod_ds_relations": {
+    #         "usage_model_0": "model_0",
+    #         "usage_model_1": "model_1",
+    #         "paramName": "mod_ds_relations"
+    #     },
+    #     "paramName": "usage"
+    # },
+    # "mapping_ids_uuids": {
+    #     "usage_dataset_1": "glues:ilr:metadata:dataset:capri",
+    #     "usage_dataset_0": "glues:kei:metadata:dataset:dart",
+    #     "detail_0": "glues:lmu:metadata:dataset:promet",
+    #     "usage_model_0": "model_0",
+    #     "usage_model_1": "model_1",
+    #     "paramName": "mapping_ids_uuids",
+    #     "6479e718-3a61-45cb-b36a-015254f56d7a": "6479e718-3a61-45cb-b36a-015254f56d7a",
+    #     "lineage_dataset_5": "f0b8bcb5-cdea-46da-a51b-972d81e10def",
+    #     "lineage_dataset_3": "476cb529-a1c0-47e1-84e7-1494acee7eaa",
+    #     "lineage_dataset_4": "f3b06df1-4e00-4a29-8442-7104aef2601f",
+    #     "596c710f-1830-4582-a0ec-13627f370b2f": "596c710f-1830-4582-a0ec-13627f370b2f",
+    #     "lineage_model_0": "model_2",
+    #     "lineage_dataset_1": "cc92dd0e-47d3-4cce-b358-d134fd607539",
+    #     "lineage_dataset_2": "f9b95aec-bada-4326-aa60-144032cc0240",
+    #     "1f057e8b-16f0-43ad-a788-860250a31625": "1f057e8b-16f0-43ad-a788-860250a31625",
+    #     "lineage_dataset_0": "c9844990-9a92-4be1-a04f-6cb12a048e05"
+    # },
+
+    RESULTS['usage']['models'] = {
+        "paramName": "usage_models",
+        "usage_model_ids": [
+            "usage_model_{}".format(index) for index in xrange(len(usage_models))
+        ]
+    }
+    RESULTS['usage']['mod_ds_relations'] = {
+        "paramName": "mod_ds_relations"
+    }
+    for index in xrange(len(usage_models)):
+        RESULTS['usage']['mod_ds_relations']['usage_model_{}'.format(index)] = 'model_{}'.format(index)
+    
+    RESULTS['mapping_ids_uuids']['lineage_model_0'] = 'model_{}'.format(len(usage_models))
+    RESULTS['mapping_ids_uuids']['detail_0'] = extra_vars['detail_data']['code']
+    for index in xrange(len(usage_models)):
+        RESULTS['mapping_ids_uuids']['usage_model_{}'.format(index)] = 'model_{}'.format(index)
+    
+    for index, producer_info in enumerate(extra_vars['datalineage_producers']):
+        RESULTS['mapping_ids_uuids']['lineage_dataset_{}'.format(index)] = producer_info['code']
+
+    for index in xrange(len(usage_models)):
+        value = RESULTS['model_data']['model_{}'.format(index)]['output_datasets'][0] if RESULTS['model_data']['model_{}'.format(index)]['output_datasets'] else ''
+        if value:
+            RESULTS['mapping_ids_uuids']['usage_dataset_{}'.format(index)] = value
+
 
 
 
@@ -475,34 +621,42 @@ class DataLineageController(PackageController):
             }
             query = get_action('package_search')(context, data_dict)
 
+            results = query['results'][0] if query['results'] else {}
             if c.pkg_dict.get('parent'):
-                extra_vars['datalineage_wasgeneratedby'] = query['results'][0]
+                extra_vars['datalineage_wasgeneratedby'] = results
             else:
-                extra_vars['datalineage_generates'] = query['results'][0]
+                extra_vars['datalineage_generates'] = results
 
-            usage_models = get_usage_models(context, c.pkg_dict if c.pkg_dict.get('parent') else query['results'][0])
+            usage_models = get_usage_models(context, c.pkg_dict if c.pkg_dict.get('parent') else results)
             usage_datasets = get_usage_datasets(context, usage_models)
+            extra_vars['usage_models'] = usage_models
+            extra_vars['usage_datasets'] = usage_datasets
+            extra_vars['detail_data'] = c.pkg_dict if c.pkg_dict.get('parent') else results
+            extra_vars['current_model'] = results if c.pkg_dict.get('parent') else c.pkg_dict
             
             # get the producers DSs
-            producers = c.pkg_dict.get('producers', []) or query['results'][0].get('producers', [])
+            producers = c.pkg_dict.get('producers', '') or results.get('producers', '')
             producers_info = []
-            for ds_code in producers.split(','):
-                q = 'extras_code:%s' % (ds_code.replace(':', '\:'))
-                data_dict = {
-                'q': q,
-                'fq': q,
-                'extras': {},
-                'include_private': asbool(config.get(
-                    'ckan.search.default_include_private', True)),
-                }
-                query = get_action('package_search')(context, data_dict)
-                if query['count'] == 0:
-                    logger.warning('No result found for producer [%s] of package [%s]' % (ds_code, c.pkg_dict['code']) )
-                else:
-                    producers_info.append(query['results'][0])
+            if producers:
+                for ds_code in producers.split(','):
+                    q = 'extras_code:%s' % (ds_code.replace(':', '\:'))
+                    data_dict = {
+                    'q': q,
+                    'fq': q,
+                    'extras': {},
+                    'include_private': asbool(config.get(
+                        'ckan.search.default_include_private', True)),
+                    }
+                    query = get_action('package_search')(context, data_dict)
+                    if query['count'] == 0:
+                        logger.warning('No result found for producer [%s] of package [%s]' % (ds_code, c.pkg_dict['code']) )
+                    else:
+                        producers_info.append(query['results'][0])
             
 
             extra_vars['datalineage_producers'] = producers_info
+            convert_extra_vars_to_metaviz(extra_vars)
+            # raise RuntimeError(RESULTS)
 
             dataset_type = c.pkg_dict['type'] or 'dataset'
             extra_vars['dataset_type'] = dataset_type
@@ -513,7 +667,7 @@ class DataLineageController(PackageController):
 
         return render('package/datalineage.html',
                         # extra_vars = {'data': json.dumps(extra_vars)},
-                        extra_vars = {'data': json.dumps(EXAMPLE_DATA)}
+                        extra_vars = {'data': json.dumps(RESULTS)}
                       )
 
 

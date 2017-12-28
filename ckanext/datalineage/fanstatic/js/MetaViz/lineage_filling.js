@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 52°North Initiative for Geospatial Open Source Software GmbH
+ * Copyright 2012 52ï¿½North Initiative for Geospatial Open Source Software GmbH
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,5 +62,5 @@ function fillLineage() {
 		  }
 	  }  
   }
-  if (dojo.byId('pubs').innerHTML == "") dojo.byId('pubs').innerHTML = "There are no publications avaliable.";	  
+ 
 }
