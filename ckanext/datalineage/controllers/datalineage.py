@@ -660,7 +660,6 @@ class DataLineageController(PackageController):
 
             extra_vars['datalineage_producers'] = producers_info
             convert_extra_vars_to_metaviz(extra_vars)
-            # raise RuntimeError(RESULTS)
 
             dataset_type = c.pkg_dict['type'] or 'dataset'
             extra_vars['dataset_type'] = dataset_type
