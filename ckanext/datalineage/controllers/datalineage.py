@@ -518,6 +518,10 @@ def convert_extra_vars_to_metaviz(extra_vars):
         RESULTS['dataset_data'][usage_ds['code']] = create_metavis_ds_info(usage_ds, 
                                                                             ds_type='usage',
                                                                             linked_2_model=False)
+    for producer_info in extra_vars['datalineage_producers']:
+        RESULTS['dataset_data'][producer_info['code']] = create_metavis_ds_info(producer_info, 
+                                                                                ds_type='lineage',
+                                                                                linked_2_model=False)
                                                                         
 
     convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars)
