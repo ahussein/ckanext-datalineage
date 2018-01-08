@@ -312,14 +312,24 @@ EXAMPLE_DATA = {
     }
 }
 
-RESULTS = {
-    'model_data': {"paramName": "models"},
-    'usage': {"paramName": "usage"},
-    'dataset_data': {"paramName": "datasets"},
-    'paramName': 'metaViz_data',
-    'mapping_ids_uuids': {"paramName": "mapping_ids_uuids"},
-    'detail_data': {"paramName": "detail"}
-}
+RESULTS = {}
+
+
+def reinitialize_results():
+    """
+    Resets the globale RESULTS variable
+    """
+    global RESULTS
+
+    RESULTS = {
+        'model_data': {"paramName": "models"},
+        'usage': {"paramName": "usage"},
+        'dataset_data': {"paramName": "datasets"},
+        'paramName': 'metaViz_data',
+        'mapping_ids_uuids': {"paramName": "mapping_ids_uuids"},
+        'detail_data': {"paramName": "detail"}
+    }
+
 
 
 def get_usage_models(context, ds_info):
@@ -430,6 +440,7 @@ def create_metavis_ds_info(dataset_info, ds_type='usage_input', linked_2_model=F
         'vector': 'false',
         'time': dataset_info.get('metadata_created', ''),
         'info': 'null',
+        'name': dataset_info.get('name' ''),
     }
     if linked_2_model:
         result['linked_2_modelInput'] = 0
@@ -462,7 +473,7 @@ def convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars):
             ]
         }
     """
-    
+    index = -1
     for index, model_info in enumerate(usage_models):
         RESULTS['model_data']['model_{}'.format(index)] = {
             'paramName': 'model_{}'.format(index),
@@ -472,6 +483,7 @@ def convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars):
             'title': model_info.get('title', ''),
             'type': 'usage',
             'info': '',
+            'name': model_info.get('name', ''),
             'output_datasets':[
                 usage_datasets.get(model_info['code'], {}).get('code', '')
             ],
@@ -489,6 +501,7 @@ def convert_model_data_to_metaviz(usage_models, usage_datasets, extra_vars):
             'title': model_info.get('title', ''),
             'type': 'lineage',
             'info': '',
+            'name': model_info.get('name', ''),
             'output_datasets':[
                 extra_vars['detail_data']['code']
             ],
@@ -598,7 +611,7 @@ class DataLineageController(PackageController):
         """
         Retrieves data lineage information for a specific package
         """
-
+        reinitialize_results()
         context = {'model': model, 'session': model.Session,
                    'user': c.user, 'for_view': True,
                    'auth_user_obj': c.userobj}
@@ -660,6 +673,7 @@ class DataLineageController(PackageController):
 
             extra_vars['datalineage_producers'] = producers_info
             convert_extra_vars_to_metaviz(extra_vars)
+            
 
             dataset_type = c.pkg_dict['type'] or 'dataset'
             extra_vars['dataset_type'] = dataset_type

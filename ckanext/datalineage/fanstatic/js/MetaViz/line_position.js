@@ -76,8 +76,8 @@ function setLines() {
   else {
 	  surface = dojox.gfx.createSurface(dojo.byId('actual_lines'), 700, surface_height);
 	  dojo.byId("usage_mini_cards").style.left = "-200px";
-	  dojo.byId("lineage_info").style.width = "400px";
-	  dojo.byId("publication_info").style.width = "400px";
+	//   dojo.byId("lineage_info").style.width = "400px";
+	//   dojo.byId("publication_info").style.width = "400px";
   }
 	  
   num_ds = num_lin_ds;

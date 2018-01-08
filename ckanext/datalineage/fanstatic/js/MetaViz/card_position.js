@@ -364,11 +364,11 @@ function showInputs(id) {
 				var is_time = false;
 				if (ds.time != null && ds.time[0] != "") { ds_time = ", <br />" + ds.time; is_time = true; }
 		        var html_card = "";  
-		        html_card += "<div id=\"" + "input_dataset_" + i + "\" class=\"input_card\" style=\"top:" + (top_dataset - (cards*distance) + offset) + "px; \">";
-		        html_card += "<p  style=\"font-size:10px;\">" + "DATASET INPUT" + "</p>";
+		        html_card += "<div data-name=\"" + ds.name + "\" id=\"" + "input_dataset_" + i + "\" class=\"input_card\" style=\"top:" + (top_dataset - (cards*distance) + offset) + "px; \">";
+		        html_card += "<p  data-name=\"" + ds.name + "\" style=\"font-size:10px;\">" + "DATASET INPUT" + "</p>";
 		        var title = ds.title;
 		        if(title[0].length>25)title=title[0].substring(0,25)+"...";
-		        html_card += "<p  class=\"object_title\" style=\"top:-20px;\">" + title + "</p>";        
+		        html_card += "<p  data-name=\"" + ds.name + "\" class=\"object_title\" style=\"top:-20px;\">" + title + "</p>";        
 		        html_card += "</div>";
 		        dojo.byId("input_container").innerHTML += html_card;
 		        drawArrow({ start: { x: left_dataset + width + 3, y: offset + top_dataset - (cards * distance) + 20 }, end: { x : left_usage_model, y : top_usage_model + 55 }});   
@@ -378,6 +378,7 @@ function showInputs(id) {
 			drawArrow({ start: { x: left_dataset + width + 3, y: top_dataset + 55 }, end: { x : left_usage_model, y : top_usage_model + 55 }});
 		}
 	}
+    register_callbacks();
 }
 
 

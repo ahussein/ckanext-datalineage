@@ -193,4 +193,44 @@ metaViz.displayMetaViz = function(data) {
     dojo.byId("page").style.display = "block";
     if (dijit.byId("map_contentPane"))
         dijit.byId("map_contentPane").resize();
+
+    register_callbacks();
 };
+
+function handle_dblclick(event){
+    var url = window.location.href.split('/')
+    // remove the last two parts of the url after the last two /
+    url.pop()
+    url.pop()
+    ev_id = event.target.id;
+    id = ev_id.split('_', 3).join('_');
+    var mappings;
+    mStore.fetchItemByIdentity({ identity: "mapping_ids_uuids", onItem: function(item, request) { mappings = item; }});
+    var mapped_id = mStore.getValues(mappings, id);
+    var ds;
+    mStore.fetchItemByIdentity({ identity: mapped_id[0], onItem: function(item, request) { ds = item; }});
+    if (ds != null){
+        url.push(ds['name']);       
+        location.replace(url.join('/'));
+    }
+    if (event.target.dataset.name != null){
+        url.push(event.target.dataset.name);
+        location.replace(url.join('/'));
+    }
+}
+
+function register_callbacks(){
+    var elm1 = document.getElementsByClassName("description_card");
+    var elm2 = document.getElementsByClassName("description_card_petrol");
+    var elm3 = document.getElementsByClassName("input_card");
+    var index;
+    for (index = 0; index < elm1.length; index++){
+        elm1[index].ondblclick = handle_dblclick;
+    }
+    for (index = 0; index < elm2.length; index++){
+        elm2[index].ondblclick = handle_dblclick;
+    }
+    for (index = 0; index < elm3.length; index++){
+        elm3[index].ondblclick = handle_dblclick;
+    }
+}

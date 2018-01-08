@@ -2,6 +2,7 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 
+from controllers.utils import get_title_for_code
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,6 +12,20 @@ class DatalineagePlugin(plugins.SingletonPlugin, tk.DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes)
+
+    # Declare that this plugin will implement ITemplateHelpers.
+    plugins.implements(plugins.ITemplateHelpers)
+
+    # ITemplateHelpers
+    def get_helpers(self):
+        '''Register the get_title_for_code() function above as a template
+        helper function.
+
+        '''
+        # Template helper function names should begin with the name of the
+        # extension they belong to, to avoid clashing with functions from
+        # other extensions.
+        return {'datalineage_get_title_for_code': get_title_for_code}
 
     # IRoutes
     def after_map(self, map):

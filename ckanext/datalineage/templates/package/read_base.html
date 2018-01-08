@@ -3,7 +3,10 @@
 {% block content_primary_nav %}
 
     {{ super() }}
-    {% if pkg.parent or pkg.producers or pkg.consumers %}
+    {# This will show the lineage info tab only if the metadata represent an activity or a dataset that has producers #}
+    {% if pkg.parent %}
+        {{ h.build_nav_icon('dataset_lineage', _('Lineage Info'), id=pkg.name) }}
+    {% elif pkg.producers %}
         {{ h.build_nav_icon('dataset_lineage', _('Lineage Info'), id=pkg.name) }}    
     {% endif %}
 {% endblock %}
